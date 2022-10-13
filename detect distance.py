@@ -1,6 +1,7 @@
 from turtle import color
 import cv2
 import pyrealsense2
+import webcolors as wc
 from realsense_depth import *
 
 point = (400, 300)
@@ -8,7 +9,12 @@ point = (400, 300)
 def show_distance(event, x, y, args, params):
     global point
     point = (x, y)
-    print(color_frame[y][x])
+    RGB = np.flip(color_frame[y][x])
+    if (RGB[0] > 150 and RGB[1] < 100 and RGB[2] < 100):
+        print(f"RED -> {RGB}")
+    else:
+        print(f"NOT RED -> {RGB}")
+    
 
 # Initialize Camera Intel Realsense
 dc = DepthCamera()
@@ -21,11 +27,10 @@ while True:
     ret, depth_frame, color_frame = dc.get_frame()
 
     # Show distance for a specific point
-    cv2.circle(color_frame, point, 4, (0, 0, 255))
+    #cv2.circle(color_frame, point, 4, (0, 0, 255))
     distance = depth_frame[point[1], point[0]]
 
     cv2.putText(color_frame, "{}mm".format(distance), (point[0], point[1] - 20), cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 0), 2)
-
 
     cv2.imshow("depth frame", depth_frame)
     cv2.imshow("Color frame", color_frame)
