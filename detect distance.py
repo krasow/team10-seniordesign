@@ -2,7 +2,7 @@
 
 from turtle import color
 import cv2
-import pyrealsense2
+import pyrealsense2.pyrealsense2
 import numpy as np
 import pandas as pd
 import time
@@ -37,6 +37,7 @@ dc = DepthCamera()
 # Create mouse event
 cv2.namedWindow("Color frame")
 cv2.setMouseCallback("Color frame", show_distance)
+
 
 while True:
     ret, depth_frame, color_frame = dc.get_frame()
@@ -74,38 +75,38 @@ while True:
     blur = cv2.GaussianBlur(color_frame,(7,7),10)
 
     # loop all pixels in image
-    for y in range(0,480,1):
-        for x in range(0,640,1):
-            RGB = blur[y][x]
-            # red bags
-            if (RGB[2] > 125 and RGB[1] < 100 and RGB[0] < 100):
-                if (y > 100 and red_flag1 == 0):
-                    cv2.putText(blur, "RED", (x-20, y+20), cv2.FONT_HERSHEY_DUPLEX, .5, (255, 255, 255), 1)
-                    red_flag1 = 1
-                if (y > 200 and red_flag2 == 0):
-                    cv2.putText(blur, "RED", (x+20, y+20), cv2.FONT_HERSHEY_DUPLEX, .5, (255, 255, 255), 1)
-                    red_flag2 = 1
-                blur[y][x] = [0,0,255]
-                #blue bags
-            elif (RGB[2] < 50 and RGB[1] < 100 and RGB[0] > 75):
-                if (y > 100 and blue_flag1 == 0):
-                    cv2.putText(blur, "BLUE", (x-20, y+20), cv2.FONT_HERSHEY_DUPLEX, .5, (255, 255, 255), 1)
-                    blue_flag1 = 1
-                if (y > 200 and blue_flag2 == 0 and blue_flag1 == 1):
-                    cv2.putText(blur, "BLUE", (x-20, y+20), cv2.FONT_HERSHEY_DUPLEX, .5, (255, 255, 255), 1)
-                    blue_flag2 = 1
-                blur[y][x] = [255,0,0]
-                #cv2.putText(blur, "{}mm".format(distance), (y, x - 20), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 2)
-            elif (RGB[2] > 120 and RGB[1] > 100 and RGB[0] > 100):
-                if(RGB[2] > 150 and RGB[1] > 200 and RGB[0] > 240):
-                    blur[y][x] = [0,255,0]
-                elif (RGB[2] > RGB[0]):
-                    blur[y][x] = [50,50,50]  #board
-                else:
-                    blur[y][x] = [0,0,0]  #background
-            else:
-                blur[y][x] = [0,0,0]
-            #else:
+    # for y in range(50,400,1):
+    #     for x in range(200,400,1):
+    #         RGB = blur[y][x]
+    #         # red bags
+    #         if (RGB[2] > 125 and RGB[1] < 100 and RGB[0] < 100):
+    #             if (y > 100 and red_flag1 == 0):
+    #                 cv2.putText(blur, "RED", (x-20, y+20), cv2.FONT_HERSHEY_DUPLEX, .5, (255, 255, 255), 1)
+    #                 red_flag1 = 1
+    #             if (y > 200 and red_flag2 == 0):
+    #                 cv2.putText(blur, "RED", (x+20, y+20), cv2.FONT_HERSHEY_DUPLEX, .5, (255, 255, 255), 1)
+    #                 red_flag2 = 1
+    #             blur[y][x] = [0,0,255]
+    #             #blue bags
+    #         elif (RGB[2] < 50 and RGB[1] < 100 and RGB[0] > 75):
+    #             if (y > 100 and blue_flag1 == 0):
+    #                 cv2.putText(blur, "BLUE", (x-20, y+20), cv2.FONT_HERSHEY_DUPLEX, .5, (255, 255, 255), 1)
+    #                 blue_flag1 = 1
+    #             if (y > 200 and blue_flag2 == 0 and blue_flag1 == 1):
+    #                 cv2.putText(blur, "BLUE", (x-20, y+20), cv2.FONT_HERSHEY_DUPLEX, .5, (255, 255, 255), 1)
+    #                 blue_flag2 = 1
+    #             blur[y][x] = [255,0,0]
+    #             #cv2.putText(blur, "{}mm".format(distance), (y, x - 20), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 2)
+    #         elif (RGB[2] > 120 and RGB[1] > 100 and RGB[0] > 100):
+    #             if(RGB[2] > 150 and RGB[1] > 200 and RGB[0] > 240):
+    #                 blur[y][x] = [0,255,0]
+    #             elif (RGB[2] > RGB[0]):
+    #                 blur[y][x] = [50,50,50]  #board
+    #             else:
+    #                 blur[y][x] = [0,0,0]  #background
+    #         else:
+    #             blur[y][x] = [0,0,0]
+    #         #else:
                 #color_frame[y][x] = [255,255,255]
 
 
@@ -114,28 +115,41 @@ while True:
     # the original code for contours, as it is right now it just puts the 
     # contour as the border of the image instead of getting the bags
 
-    # cropped = color_frame[20:470, 140:460]
+    cropped = color_frame[20:470, 140:460]
 
-    # gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
-    # blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    # thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)[1]
-    # cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
-	#     cv2.CHAIN_APPROX_SIMPLE)
-    # cnts = imutils.grab_contours(cnts)
-    # for c in cnts:
-    #     # compute the center of the contour
-    #     M = cv2.moments(c)
-    #     # if (M["m00"] == 0):
-    #     #     M["m00"] = 1
-    #     if cv2.contourArea(c) > 1:
-    #         cX = int(M["m10"] / M["m00"])
-    #         cY = int(M["m01"] / M["m00"])
-    #         # draw the contour and center of the shape on the color_frame
-    #         cv2.drawContours(cropped, [c], -1, (0, 255, 0), 2)
-    #         cv2.circle(cropped, (cX, cY), 7, (255, 255, 255), -1)
-    #         cv2.putText(cropped, "center", (cX - 20, cY - 20),
-    #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-    #     #show the color_frame
+    gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    thresh = cv2.threshold(blurred, 80, 255, cv2.THRESH_BINARY_INV)[1]
+    cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
+	    cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+    for c in cnts:
+        # compute the center of the contour
+        M = cv2.moments(c)
+        # if (M["m00"] == 0):
+        #     M["m00"] = 1
+        if (cv2.contourArea(c) > 5000 and cv2.contourArea(c) < 15000):
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            # draw the contour and center of the shape on the color_frame
+            cv2.drawContours(cropped, [c], -1, (0, 255, 0), 2)
+            rgb_pixel_value = cropped[cY][cX]
+
+            #cv2.circle(cropped, (cX, cY), 7, (255, 255, 255),5)
+            if rgb_pixel_value[2]>rgb_pixel_value[1] and rgb_pixel_value[2]>rgb_pixel_value[0]:
+                color = "RED"
+            elif rgb_pixel_value[0]>rgb_pixel_value[2] and rgb_pixel_value[1]<rgb_pixel_value[0]:
+                color = "BLUE"
+            else:
+                color = "GREEN"
+                cv2.putText(cropped, f"pixel {str(rgb_pixel_value)}", (cX + 20, cY + 20),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+            # print(f"[{cX},{cY}] - Pixel Color : {color}")
+            cv2.putText(cropped, f"center {cv2.contourArea(c)}", (cX - 20, cY - 20),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+            cv2.putText(cropped, f"color {color}", (cX - 40, cY - 40),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        #show the color_frame
 
 
 
@@ -147,11 +161,28 @@ while True:
     #cv2.putText(color_frame, "{}mm".format(distance), (point[0], point[1] - 20), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 2)
 
     #cv2.imshow("depth frame", depth_frame)
-    cv2.imshow("Color frame", blur)
+    cv2.imshow("Color frame", cropped)
+    # cv2.imshow("gray",thresh)
+
     key = cv2.waitKey(1)
     if key == 27:
         break
 
     # since the code right now is a double nested for loop, I added a sleep to make sure there are no issues with 
     # computation time
-    time.sleep(5) 
+    #time.sleep(5) 
+
+
+'''
+Score Handler
+
+* Loop over redBags & blueBags array and determine if they have changed since last time
+    -> If array count increases then increase score using the following logic:
+        * Bag count has decreased and light barrier interrupt has been triggered
+            * Increase bagColorScore by 3 for x number of bags that have left the array
+        * Bag count has decreased and light barrier has not been triggered
+            * Decrease bagColorScore by 1 for x number of bags that have left the array
+    -> If array count decreases then check if light barrier has been triggered
+        * Light Barrier has not been broken: decrease bagColorScore by x number of bags
+        * Light Barrier has been broken: Check difference in each team's bag count and handle using standard logic
+'''
