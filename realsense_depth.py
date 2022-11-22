@@ -1,6 +1,6 @@
 # code from Sergio Canu (PySource) https://pysource.com/2021/03/11/distance-detection-with-depth-camera-intel-realsense-d435i/
 
-import pyrealsense2 as rs
+import pyrealsense2.pyrealsense2 as rs
 import numpy as np
 
 class DepthCamera:
