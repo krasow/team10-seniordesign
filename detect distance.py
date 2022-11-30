@@ -115,6 +115,7 @@ while True:
                 redArray.append([cX, cY])
             else:
                 pass
+
     while(len(contoursArr) != 0 and over == 1):
         ret, depth_frame, color_frame = dc.get_frame()
         cropped = color_frame[20:470, 140:460]
@@ -127,6 +128,7 @@ while True:
         contoursArr = imutils.grab_contours(contoursArr)
         print(f"\n\ntotal score\n\n\t\tred : {redTotal}\n\t\tblue: {blueTotal}\n")
         
+
     if (len(contoursArr) == 0 and over == 1):
         #print(f"\n\ntotal score\n\n\t\tred: {redTotal}\n\t\tblue{blueTotal}\n")
         over = 0
@@ -138,18 +140,16 @@ while True:
         blueArrayPrev = []
         #exit()
         
-    if (redTotal > 6):
+    if (redTotal > 11):
         print("\n\nRED WINS\n\n")
+        exit()
+    elif (blueTotal > 11):
+        print("\n\Blue WINS\n\n")
         exit()
 
         
     
-        
-            
 
-            #cv2.putText(cropped, f"center {cv2.contourArea(contour)}", (cX - 20, cY - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-            #cv2.putText(cropped, f"color {color}",                     (cX - 40, cY - 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-   
 
     '''
     Score Handler
