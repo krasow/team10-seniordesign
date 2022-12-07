@@ -1,10 +1,9 @@
-# tkinter : python3 -m pip install tk
-# pynput  : puthon3 -m pip install pynput
+# detect distance.py
+# ECE-4960 : Senior Design II
+# Automated Cornhole
+# Jason Baer, Aaron Bruner, David Krasowska, Ross Snead
+# References - https://pysource.com/2021/03/11/distance-detection-with-depth-camera-intel-realsense-d435i/
 
-from pynput.keyboard import Key, Controller
-from tkinter import *
-import tkinter
-from tkinter import messagebox
 import cv2
 import pyrealsense2
 import numpy as np
@@ -13,30 +12,21 @@ import time
 import lgpio
 from realsense_depth import *
 
-#####################################################################################################
-#                           Setup GUI and display initial score                                     #
-#####################################################################################################
-
-GUI = Tk()
-# Initialize global variables for score
-scoreBLUE = scoreRED = 0
-MAX_SCORE = 6; MIN_SCORE = 0
-redTotal = blueTotal = 0
-redArray = []; blueArray = []; redArrayPrev = []; blueArrayPrev = []
-
-WINNER = 0
-
+# Setup everything
+# Initialize Camera Intel Realsense
 dc = DepthCamera()
-
+# Initialize GPIO pin for laser sensor
 laser = 4
 h = lgpio.gpiochip_open(0)
 lgpio.gpio_claim_input(h, laser)
-blueScore = 0; redScore = 0
-redInningScore = 0; blueInningScore = 0
-redTotal = 0; blueTotal = 0
+blueScore = 0
+redScore = 0
+redInningScore = 0
+blueInningScore = 0
+redTotal = 0
+blueTotal = 0
 over = 0
-LASER = 0
-sinkColor = "none"
+
 
 
 def getColor(x, y, image):
@@ -47,7 +37,8 @@ def getColor(x, y, image):
         return "BLUE"
     else:
         return ""
-
+        
+        
 # check if a black square is on the board signifying the inning is over
 def endInning(x, y, image):
     RGB = np.flip(image[y][x])
@@ -56,128 +47,42 @@ def endInning(x, y, image):
     else: return 0
 
 
-# Create instance of keyboard so we can simulate key presses
-keyboard = Controller()
+redArray = []
+blueArray = []
+redArrayPrev = []
+blueArrayPrev = []
+LASER = 0
+sinkColor = "none"
 
-# Setup screen with size and background image
-GUI.configure(bg='black')
-GUI.title("CORNHOLE SCOREBOARD")
-GUI.geometry('800x480')
-bg = PhotoImage(file = "scoreboard_background.png")
-backgroundImage = Label(GUI, image = bg)
-backgroundImage.place(x = 0, y = 0)
-
-# Create the blue player's score label
-BLUE_SCORE = IntVar()
-BLUE_SCORE.set(scoreBLUE)
-BLUE_SCORE_LABEL = Label(GUI, textvariable=BLUE_SCORE, font=("times", 250, 'bold'), bg="blue", justify=CENTER)
-BLUE_SCORE_LABEL.pack()
-BLUE_SCORE_LABEL.place(relx=0.25, rely=0.5, anchor='center')
-
-# Create the red player's score label
-RED_SCORE = IntVar()
-RED_SCORE.set(scoreRED)
-RED_SCORE_LABEL = Label(GUI, textvariable=RED_SCORE, font=("times", 250, 'bold'), bg="red", justify=CENTER)
-RED_SCORE_LABEL.pack()
-RED_SCORE_LABEL.place(relx=0.75, rely=0.5, anchor='center')
-
-#####################################################################################################
-
-'''
-    * Clear Score
-        -> i
-    * End Game (Exit)
-        -> q
-'''
-def key_pressed(event):
-    global BLUE_SCORE
-    global RED_SCORE
-    global redTotal
-    global blueTotal
-    if  event.char == 'i':
-        redTotal = 0
-        blueTotal = 0
-        BLUE_SCORE.set(0)
-        RED_SCORE.set(0)
-    if event.char == "k":
-        RED_SCORE.set(max(min(MAX_SCORE, RED_SCORE.get() + 1), MIN_SCORE))
-        redTotal += 1
-    if event.char == "l":
-        RED_SCORE.set(max(0, RED_SCORE.get() - 1))
-        redTotal -= 1
-    if event.char == "a":
-        BLUE_SCORE.set(max(min(MAX_SCORE, BLUE_SCORE.get() + 1), MIN_SCORE))
-        blueTotal += 1
-    if event.char == "s":
-         BLUE_SCORE.set(max(0, BLUE_SCORE.get() - 1))
-         blueTotal -= 1
-    
-    ############### QUIT ###############
-    elif event.char == 'q':
-        exit()        
-
-#####################################################################################################
-
-# Event handler for key press
-GUI.bind('<Key>', key_pressed)
-# Startup in full screen mode
-GUI.attributes('-fullscreen', True)
 time.sleep(3)
 ret, depth_back, color_back = dc.get_frame()
 gray_back = cv2.cvtColor(color_back, cv2.COLOR_BGR2GRAY)[:, 140:460]
-depth_back_crop = depth_back[:, 140:460]
-# Execute Image Processing Algorithm
-def ImageProcessing():
-    global redTotal, blueTotal
-    global redArray, blueArray, redArrayPrev, blueArrayPrev
-    global dc, laser, h
-    global blueScore, redScore, redTotal, blueTotal
-    global redInningScore, blueInningScore
-    global over
-    global LASER
-    global sinkColor
-    global MAX_SCORE
-    global WINNER
-    '''
-    if (WINNER == 2):
-        exit()
-    if (WINNER == 1):
-        time.sleep(5)
-        if redTotal > blueTotal:
-            RED_SCORE.set(1)
-            BLUE_SCORE.set(0)
-        else:
-            RED_SCORE.set(0)
-            BLUE_SCORE.set(1)
-        time.sleep(3)
-        WINNER += 1
-    '''
-    if WINNER == 2:
-        exit()
-    if WINNER == 1:
-        #RED_SCORE.set(1)
-        #BLUE_SCORE.set(0)
-        time.sleep(3)
-        WINNER = 2
-        exit()
-    cX = cY = 0
-    ret, depth_frame, color_frame = dc.get_frame()
-    cropped = color_frame[:, 140:460]
-    depth_frame_crop = depth_frame[:, 140:460]  
-    gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+depth_back_crop = depth_back[:,140:460]
 
-    gray = cv2.absdiff(gray, gray_back)
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    thresh = cv2.threshold(blurred, 80, 255, cv2.THRESH_BINARY)[1]
-
+while True:
     redArrayPrev = redArray.copy()
     blueArrayPrev = blueArray.copy()
     redArray = []
     blueArray = []
+    cX = cY = 0
+
+    ret, depth_frame, color_frame = dc.get_frame()
+    cropped = color_frame[:, 140:460]
+    gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+    depth_frame_crop = depth_frame[:,140:460]
+    #cv2.imshow("regular",depth_frame_crop)
+
+    gray = cv2.absdiff(gray, gray_back)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    thresh = cv2.threshold(blurred, 10, 255, cv2.THRESH_BINARY)[1]
+    # 100 is a good threshold for low light (windows closed), 130 is good for bright (windows open)
 
     contoursArr = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     contoursArr = imutils.grab_contours(contoursArr)
     depth_normal = np.zeros((450,320))
+    #depth_normal = cv2.normalize(depth_frame_crop.copy(),depth_normal,0,255,cv2.NORM_MINMAX)
+    #cv2.imshow("noramlized",depth_normal)
+    #cv2.imshow("deeth",depth_normal)
     sub_depth = cv2.absdiff(depth_frame_crop,depth_back_crop)
     #print(f"{sub_depth[280,140]}")
     for contour in contoursArr:
@@ -192,6 +97,20 @@ def ImageProcessing():
             color = getColor(cX, cY, cropped)
             # check for black square
             over = endInning(cX, cY, cropped)
+            if (over == 1):
+                cv2.drawContours(cropped, [contour], -1, (0, 255, 0), 2)
+                if (blueScore > redScore):
+                    blueInningScore = blueScore - redScore
+                    redInningScore = 0
+                elif (redScore > blueScore):
+                    redInningScore = redScore - blueScore
+                    blueInningScore = 0
+                else:
+                    redInningScore = blueInningScore = 0
+                redTotal += redInningScore
+                blueTotal += blueInningScore
+                redInningScore = blueInningScore = 0
+                break
             
             # update blue and red arrays for each side
             #find subdepth average
@@ -201,7 +120,8 @@ def ImageProcessing():
             #sub_depth = cv2.absdiff(depth_frame_crop,depth_back_crop)
             #depth_normal = cv2.normalize(sub_depth.copy(),depth_normal,0,255,cv2.NORM_MINMAX)
             #cv2.imshow("noramlized",depth_normal)
-            '''for i in range(-5, 5):
+            max_ = -1
+            for i in range(-5, 5):
                 for j in range(-5, 5):
                     if cY + i > 449:
                         #print("g tahn 449\n")
@@ -209,12 +129,15 @@ def ImageProcessing():
                     if cX + j > 319:
                         #print(f"{cY}\n")
                         break
-
-                    sumd += sub_depth[cY + i, cX + j]
-                    iterations += 1
-            if iterations:        return "RED"
+                    if (sub_depth[cY+i,cX+j] > max_):
+                        max_ = sub_depth[cY+i,cX+j]
+                    #sumd += sub_depth[cY + i, cX + j]
+                    #iterations += 1
+            if (max_ > 40):
+                print("stacked bag detected\n")
+            if iterations:
                 avgd = sumd / iterations          
-                '''
+        
             if color == "BLUE":
                 cv2.drawContours(cropped, [contour], -1, (0, 255, 0), 2)
                 #print(f"{avgd}\n")
@@ -239,7 +162,7 @@ def ImageProcessing():
         contoursArr = imutils.grab_contours(contoursArr)
         cv2.drawContours(cropped, [contour], -1, (0, 255, 0), 2) 
         print(f"\n\ntotal score\n\n\t\tred : {redTotal}\n\t\tblue: {blueTotal}\n")
-
+    '''
     if (over == 1):
         if (blueScore > redScore):
             blueInningScore = blueScore - redScore
@@ -251,10 +174,10 @@ def ImageProcessing():
             redInningScore = blueInningScore = 0
         redTotal += redInningScore
         blueTotal += blueInningScore
-        RED_SCORE.set(redTotal)
-        BLUE_SCORE.set(blueTotal)
-
+    ''' 
     if (len(contoursArr) == 0 and over == 1):
+    
+        #print(f"\n\nInning Score\n\n\t\tRED: {redInningScore}\n\t\tBLUE {blueInningScore}\n")
         over = 0
         redScore = blueScore = 0
         redInningScore = blueInningScore = 0
@@ -263,27 +186,15 @@ def ImageProcessing():
         redArrayPrev = []
         blueArrayPrev = []
         #exit()
-
-    if (redTotal > MAX_SCORE):
+        
+    
+    
+    if (redTotal > 11):
         print("\n\nRED WINS\n\n")
-        #RED_SCORE.set(redTotal)
-        #BLUE_SCORE.set(blueTotal)
-        WINNER = 1
-        time.sleep(2)
-        RED_SCORE.set(1)
-        BLUE_SCORE.set(0)
-        #time.sleep(3)
-        #exit()
-    if (blueTotal > MAX_SCORE):
+        exit()
+    if (blueTotal > 11):
         print("\n\nBLUE WINS\n\n")
-        #BLUE_SCORE.set(blueTotal)
-        #RED_SCORE.set(redTotal)
-        WINNER = 1
-        time.sleep(2)
-        RED_SCORE.set(0)
-        BLUE_SCORE.set(1)
-        #time.sleep(3)
-        #exit()
+        exit()
 
     '''
     Score Handler
@@ -306,28 +217,9 @@ def ImageProcessing():
     if(lgpio.gpio_read(h, laser)):
         LASER = 1
         print("**********************************************\n")
-        #time.sleep(0.05)
+        time.sleep(0.05)
         # we need to sample multiple spots within the hole
-        # since the bag might not go perfectly in the cente
-        '''
-        sinkColor = getColor(cX, cY, cropped)
-
-        if (sinkColor == ""):
-            sinkColor = getColor(197,396,cropped)
-        if (sinkColor == ""):
-            sinkColor = getColor(154,359,cropped)
-        if (sinkColor == ""):
-            sinkColor = getColor(127,396,cropped)
-        if (sinkColor == ""):
-            sinkColor = getColor(164,426,cropped)
-        if (sinkColor == ""):
-            print("NO COLOR DETECTED\n")
-            #cv2.imshow("no detect",cropped.copy())
-            #time.sleep(60)
-            exit()
-        print(sinkColor)
-        '''
-
+        # since the bag might not go perfectly in the center
         sinkColor = getColor(182,363,cropped)
         if (sinkColor == ""):
             sinkColor = getColor(206,357,cropped)
@@ -342,14 +234,10 @@ def ImageProcessing():
             #cv2.imshow("no detect",cropped.copy())
             #time.sleep(60)
             #exit()
-
-
-
-        print(f"length = {len(blueArray)}, prev = {len(blueArrayPrev)}")
-        #exit()
+        print(sinkColor)
         time.sleep(1)
         #break
-
+        
 
 
     # update blue score
@@ -363,6 +251,10 @@ def ImageProcessing():
         blueScore += -1*bags
         blueScore += 3*bags
     elif len(blueArray) == len(blueArrayPrev) and LASER and sinkColor == "BLUE":
+        #bags = len(blueArrayPrev) - len(blueArray)
+        #print("\nsink\n")
+        #print(f"bags = {bags}\n")
+        #blueScore += -1*bags
         blueScore += 3
     elif len(blueArray) < len(blueArrayPrev) and not LASER:
         bags = len(blueArrayPrev) - len(blueArray)
@@ -385,15 +277,22 @@ def ImageProcessing():
         redScore += -1*bags
     else:
         pass
+        
+       
 
 
     cv2.imshow("Color frame", cropped)
+    cv2.imshow("thresh",thresh)
     #print(f'Red: {redScore} L: {len(redArray)}')
     #print(f'Blue: {blueScore} L: {len(blueArray)}')
     #print(f"laser = {LASER}")
-    print(f"RED: {redScore}\tBLUE: {blueScore}  ---------->>>>    length curr = {len(redArray)}, length prev = {len(redArrayPrev)}\n") 
+    
+   
+        
+    print(f"RED: {redScore}\tBLUE: {blueScore}\n")    
+        
+        
+    key = cv2.waitKey(1)
+    if key == 27:
+        break
 
-    GUI.after(1, ImageProcessing)
-
-GUI.after(1, ImageProcessing)
-GUI.mainloop()
