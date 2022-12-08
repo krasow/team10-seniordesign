@@ -64,6 +64,7 @@ while True:
     blueArrayPrev = blueArray.copy()
     redArray = []
     blueArray = []
+    cX = cY = 0
 
     ret, depth_frame, color_frame = dc.get_frame()
     cropped = color_frame[:, 140:460]
@@ -96,7 +97,7 @@ while True:
             color = getColor(cX, cY, cropped)
             # check for black square
             over = endInning(cX, cY, cropped)
-            '''if (over == 1):
+            if (over == 1):
                 cv2.drawContours(cropped, [contour], -1, (0, 255, 0), 2)
                 if (blueScore > redScore):
                     blueInningScore = blueScore - redScore
@@ -110,7 +111,7 @@ while True:
                 blueTotal += blueInningScore
                 redInningScore = blueInningScore = 0
                 break
-            '''
+            
             # update blue and red arrays for each side
             #find subdepth average
             avgd = 0
@@ -158,7 +159,7 @@ while True:
         cv2.drawContours(cropped, [contour], -1, (0, 255, 0), 2) 
         cv2.imshow("r frame", cropped) 
         print(f"\n\ntotal score\n\n\t\tred : {redTotal}\n\t\tblue: {blueTotal}\n")
-    
+    '''
     if (over == 1):
         if (blueScore > redScore):
             blueInningScore = blueScore - redScore
@@ -170,7 +171,7 @@ while True:
             redInningScore = blueInningScore = 0
         redTotal += redInningScore
         blueTotal += blueInningScore
-        
+    ''' 
     if (len(contoursArr) == 0 and over == 1):
     
         #print(f"\n\nInning Score\n\n\t\tRED: {redInningScore}\n\t\tBLUE {blueInningScore}\n")
@@ -216,15 +217,15 @@ while True:
         time.sleep(0.05)
         # we need to sample multiple spots within the hole
         # since the bag might not go perfectly in the center
-        sinkColor = getColor(cX,cY,cropped)
+        sinkColor = getColor(182,363,cropped)
         if (sinkColor == ""):
-            sinkColor = getColor(197,396,cropped)
+            sinkColor = getColor(206,357,cropped)
         if (sinkColor == ""):
-            sinkColor = getColor(154,359,cropped)
+            sinkColor = getColor(180,387,cropped)
         if (sinkColor == ""):
-            sinkColor = getColor(127,396,cropped)
+            sinkColor = getColor(150,356,cropped)
         if (sinkColor == ""):
-            sinkColor = getColor(164,426,cropped)
+            sinkColor = getColor(173,335,cropped)
         if (sinkColor == ""):
             print("NO COLOR DETECTED\n")
             cv2.imshow("no detect",cropped.copy())
@@ -240,12 +241,18 @@ while True:
     if len(blueArray) > len(blueArrayPrev):
         bags = len(blueArray) - len(blueArrayPrev) 
         blueScore += 1*bags 
-    elif len(blueArray) < len(blueArrayPrev) and LASER:
+    elif len(blueArray) < len(blueArrayPrev) and LASER and sinkColor == "BLUE":
         bags = len(blueArrayPrev) - len(blueArray)
         #print("\nsink\n")
         #print(f"bags = {bags}\n")
         blueScore += -1*bags
         blueScore += 3*bags
+    elif len(blueArray) == len(blueArrayPrev) and LASER and sinkColor == "BLUE":
+        #bags = len(blueArrayPrev) - len(blueArray)
+        #print("\nsink\n")
+        #print(f"bags = {bags}\n")
+        #blueScore += -1*bags
+        blueScore += 3
     elif len(blueArray) < len(blueArrayPrev) and not LASER:
         bags = len(blueArrayPrev) - len(blueArray)
         blueScore += -1*bags
@@ -256,10 +263,12 @@ while True:
     if len(redArray) > len(redArrayPrev):
         bags = len(redArray) - len(redArrayPrev)
         redScore += 1*bags
-    elif len(redArray) < len(redArrayPrev) and LASER:
+    elif len(redArray) < len(redArrayPrev) and LASER and sinkColor == "RED":
         bags = len(redArrayPrev) - len(redArray)
         redScore += -1*bags
         redScore += 3*bags
+    elif len(redArray) == len(redArrayPrev) and LASER and sinkColor == "RED":
+        redScore += 3
     elif len(redArray) < len(redArrayPrev) and not LASER:
         bags = len(redArrayPrev) - len(redArray)
         redScore += -1*bags
